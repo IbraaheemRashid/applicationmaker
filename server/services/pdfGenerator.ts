@@ -246,13 +246,18 @@ Tailor this CV for the job. Return the optimized CVData JSON.`;
 export async function generatePdf(html: string, filename: string): Promise<string> {
   const outputDir = getOutputDir();
   const pdfPath = path.join(outputDir, filename);
+  console.log('[generatePdf] Output dir:', outputDir, '| File:', filename);
 
+  console.log('[generatePdf] Launching Chromium...');
   const browser = await chromium.launch({ headless: true });
+  console.log('[generatePdf] Chromium launched');
   try {
     const page = await browser.newPage();
+    console.log('[generatePdf] Setting page content (HTML length:', html.length, ')');
     await page.setContent(html, { waitUntil: 'networkidle' });
     // Wait for fonts to load in browser context
     await page.evaluate('document.fonts.ready');
+    console.log('[generatePdf] Fonts ready, generating PDF...');
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -260,10 +265,16 @@ export async function generatePdf(html: string, filename: string): Promise<strin
       margin: { top: '0.6in', right: '0.6in', bottom: '0.6in', left: '0.6in' },
     });
 
+    console.log('[generatePdf] PDF buffer size:', pdfBuffer.length, 'bytes');
     fs.writeFileSync(pdfPath, pdfBuffer);
+    console.log('[generatePdf] Written to:', pdfPath);
     return pdfPath;
+  } catch (err) {
+    console.error('[generatePdf] Playwright error:', err);
+    throw err;
   } finally {
     await browser.close();
+    console.log('[generatePdf] Browser closed');
   }
 }
 

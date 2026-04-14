@@ -3,25 +3,69 @@ import { tailorCV, generatePdf, buildHtml } from '../services/pdfGenerator';
 import type { CVData } from '../services/pdfGenerator';
 import fs from 'fs';
 import path from 'path';
-import { getOutputDir } from '../services/careerOps';
+import { getOutputDir, getFontsPath } from '../services/careerOps';
 
 export const pdfRouter = Router();
+
+// Serve font files for HTML preview
+pdfRouter.get('/fonts/:filename', (req, res) => {
+  const fontsDir = getFontsPath();
+  const filePath = path.join(fontsDir, req.params.filename);
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: 'Font not found' });
+    return;
+  }
+  res.setHeader('Content-Type', 'font/woff2');
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  res.sendFile(filePath);
+});
+
+// Preview: returns rendered HTML for iframe display
+pdfRouter.post('/preview', (req, res) => {
+  try {
+    console.log('[PDF /preview] Request body keys:', Object.keys(req.body));
+    const { cvData } = req.body as { cvData: CVData };
+    if (!cvData || !cvData.name) {
+      console.warn('[PDF /preview] Missing cvData or name. cvData:', cvData);
+      res.status(400).json({ error: 'cvData with name required' });
+      return;
+    }
+    console.log('[PDF /preview] Building HTML for:', cvData.name);
+    const html = buildHtml(cvData);
+    console.log('[PDF /preview] HTML built, length:', html.length);
+    // Rewrite font URLs to point to our font endpoint
+    const previewHtml = html.replace(
+      /url\(['"]?file:\/\/[^'")\s]+\/([^'")\s/]+\.woff2)['"]?\)/g,
+      "url('/api/pdf/fonts/$1')"
+    );
+    res.setHeader('Content-Type', 'text/html');
+    res.send(previewHtml);
+  } catch (err: any) {
+    console.error('[PDF /preview] Error:', err);
+    res.status(500).json({ error: err.message || 'Preview failed' });
+  }
+});
 
 // Generate PDF from CV data (no tailoring)
 pdfRouter.post('/generate', async (req, res) => {
   try {
+    console.log('[PDF /generate] Request body keys:', Object.keys(req.body));
     const { cvData, filename } = req.body as { cvData: CVData; filename?: string };
 
     if (!cvData || !cvData.name) {
+      console.warn('[PDF /generate] Missing cvData or name. cvData:', cvData);
       res.status(400).json({ error: 'cvData with name required' });
       return;
     }
 
+    console.log('[PDF /generate] Building HTML for:', cvData.name);
     const html = buildHtml(cvData);
     const date = new Date().toISOString().split('T')[0];
     const slug = cvData.name.toLowerCase().replace(/\s+/g, '-');
     const fname = filename || `cv-${slug}-${date}.pdf`;
+    console.log('[PDF /generate] Launching Playwright for:', fname);
     const pdfPath = await generatePdf(html, fname);
+    console.log('[PDF /generate] PDF written to:', pdfPath);
 
     res.json({
       path: pdfPath,
@@ -29,7 +73,7 @@ pdfRouter.post('/generate', async (req, res) => {
       url: `/output/${fname}`,
     });
   } catch (err: any) {
-    console.error('PDF generation error:', err);
+    console.error('[PDF /generate] Error:', err);
     res.status(500).json({ error: err.message || 'PDF generation failed' });
   }
 });

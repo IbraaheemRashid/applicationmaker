@@ -100,4 +100,22 @@ export const api = {
     }),
 
   listPdfs: () => request<{ filename: string; url: string; size: number; created: string }[]>('/pdf/list'),
+
+  previewHtml: async (cvData: any): Promise<string> => {
+    console.log('[api.previewHtml] Sending request with cvData name:', cvData?.name);
+    const res = await fetch(`${API_BASE}/pdf/preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cvData }),
+    });
+    console.log('[api.previewHtml] Response status:', res.status, 'content-type:', res.headers.get('content-type'));
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      console.error('[api.previewHtml] Error body:', body);
+      throw new Error(body.error || `API error: ${res.status}`);
+    }
+    const text = await res.text();
+    console.log('[api.previewHtml] Got HTML, length:', text.length);
+    return text;
+  },
 };

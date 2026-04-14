@@ -60,6 +60,8 @@ export function CVBuilder() {
   const [newCVTarget, setNewCVTarget] = useState('');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
@@ -122,15 +124,40 @@ export function CVBuilder() {
       }
     : null;
 
+  const handlePreview = async () => {
+    if (!cvDataForApi) {
+      console.warn('[Preview] No cvDataForApi — selectedCV:', selectedCV?.id);
+      return;
+    }
+    console.log('[Preview] Starting preview with cvData:', JSON.stringify(cvDataForApi).slice(0, 200));
+    setLoadingPreview(true);
+    setPreviewMode(true);
+    try {
+      const html = await api.previewHtml(cvDataForApi);
+      console.log('[Preview] Got HTML response, length:', html.length);
+      setPreviewHtml(html);
+    } catch (err) {
+      console.error('[Preview] Failed:', err);
+      setPreviewHtml(null);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
   const handleGeneratePdf = async () => {
-    if (!cvDataForApi) return;
+    if (!cvDataForApi) {
+      console.warn('[PDF] No cvDataForApi — selectedCV:', selectedCV?.id);
+      return;
+    }
+    console.log('[PDF] Starting generation with cvData:', JSON.stringify(cvDataForApi).slice(0, 200));
     setGeneratingPdf(true);
     setPdfUrl(null);
     try {
       const result = await api.generatePdf(cvDataForApi);
+      console.log('[PDF] Generation result:', result);
       setPdfUrl(`http://localhost:3001${result.url}`);
     } catch (err) {
-      console.error('PDF generation failed:', err);
+      console.error('[PDF] Generation failed:', err);
     } finally {
       setGeneratingPdf(false);
     }
@@ -296,45 +323,52 @@ export function CVBuilder() {
               <p className="text-surface-400">Select or create a CV to start editing</p>
             </Card>
           ) : previewMode ? (
-            <Card className="p-8">
-              <div className="flex justify-between items-center mb-6">
+            <Card className="p-6">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-white">Preview: {selectedCV.name}</h2>
-                <Button variant="secondary" size="sm" onClick={() => setPreviewMode(false)}>
-                  <Edit3 size={14} /> Edit
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleGeneratePdf}
+                    disabled={generatingPdf}
+                  >
+                    {generatingPdf ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                    {generatingPdf ? 'Generating...' : 'Export PDF'}
+                  </Button>
+                  {pdfUrl && (
+                    <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="ghost" className="text-emerald-400">
+                        <FileText size={14} /> Download
+                      </Button>
+                    </a>
+                  )}
+                  <Button variant="secondary" size="sm" onClick={() => setPreviewMode(false)}>
+                    <Edit3 size={14} /> Edit
+                  </Button>
+                </div>
               </div>
-              <div className="prose prose-invert max-w-none">
-                {selectedCV.sections
-                  .sort((a, b) => a.order - b.order)
-                  .map((section) => (
-                    <div key={section.id} className="mb-6">
-                      <h3 className="text-lg font-semibold text-primary-400 border-b border-surface-700 pb-1 mb-3">
-                        {section.title}
-                      </h3>
-                      {section.content && <p className="text-surface-300 text-sm">{section.content}</p>}
-                      {section.items.map((item) => (
-                        <div key={item.id} className="mb-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-semibold text-white">{item.title}</h4>
-                              {item.subtitle && <p className="text-sm text-surface-400">{item.subtitle}</p>}
-                            </div>
-                            {item.date && <span className="text-xs text-surface-500">{item.date}</span>}
-                          </div>
-                          {item.description && <p className="text-sm text-surface-300 mt-1">{item.description}</p>}
-                          {item.bullets.filter(Boolean).length > 0 && (
-                            <ul className="mt-1 space-y-0.5">
-                              {item.bullets.filter(Boolean).map((b, i) => (
-                                <li key={i} className="text-sm text-surface-300 flex items-start gap-2">
-                                  <span className="text-primary-400 mt-1">•</span> {b}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+              <div className="bg-gray-200 rounded-lg p-4 flex justify-center" style={{ minHeight: '80vh' }}>
+                {loadingPreview ? (
+                  <div className="flex items-center gap-2 text-surface-500">
+                    <Loader2 size={20} className="animate-spin" />
+                    <span>Rendering preview...</span>
+                  </div>
+                ) : previewHtml ? (
+                  <iframe
+                    srcDoc={previewHtml}
+                    title="CV Preview"
+                    className="bg-white rounded shadow-lg"
+                    style={{
+                      width: '8.5in',
+                      minHeight: '11in',
+                      height: '100%',
+                      border: 'none',
+                    }}
+                  />
+                ) : (
+                  <p className="text-surface-500">Preview could not be loaded.</p>
+                )}
               </div>
             </Card>
           ) : (
@@ -348,7 +382,7 @@ export function CVBuilder() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewMode(true)}>
+                  <Button variant="ghost" size="sm" onClick={handlePreview}>
                     <Eye size={14} /> Preview
                   </Button>
                   <Button
