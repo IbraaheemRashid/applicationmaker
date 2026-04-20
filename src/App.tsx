@@ -1,25 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
-import { Dashboard } from './pages/Dashboard';
-import { Tracker } from './pages/Tracker';
-import { Evaluate } from './pages/Evaluate';
-import { CVBuilder } from './pages/CVBuilder';
-import { InterviewPrep } from './pages/InterviewPrep';
-import { Scan } from './pages/Scan';
-import { Settings } from './pages/Settings';
+import { Apply } from './pages/Apply';
+import { Pipeline } from './pages/Pipeline';
+import { Interview } from './pages/Interview';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/tracker" element={<Tracker />} />
-          <Route path="/evaluate" element={<Evaluate />} />
-          <Route path="/cv-builder" element={<CVBuilder />} />
-          <Route path="/interview" element={<InterviewPrep />} />
-          <Route path="/scan" element={<Scan />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/" element={<Apply />} />
+          <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/interview" element={<Interview />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -30,41 +30,44 @@ export interface EvaluationResponse {
   legitimacy: 'high' | 'medium' | 'suspicious';
   levelFit: string;
   cvMatch: number;
+  tailoredSummary: string;
+  tailoredBullets: string[];
+  coverLetter: string;
   fullReport: string;
   reportFile: string;
 }
 
 export interface PipelineResponse {
   evaluation: EvaluationResponse;
-  pdf: {
-    filename: string;
-    url: string;
-    error?: string;
-  } | null;
   autoApply: boolean;
-}
-
-export interface ScanResult {
-  jobs: { title: string; url: string; company: string; location?: string; source: string }[];
-  scanned: number;
-  errors: string[];
-}
-
-export interface PdfResult {
-  filename: string;
-  url: string;
-  path: string;
 }
 
 export interface HealthCheck {
   status: string;
-  careerOpsConnected: boolean;
-  careerOpsPath: string | null;
   hasApiKey: boolean;
+  mockAi: boolean;
+  baseUrl: string | null;
+  model: string;
+}
+
+export interface SettingsPayload {
+  hasApiKey: boolean;
+  keyPreview: string | null;
+  baseUrl: string;
+  model: string;
+  mockAi: boolean;
 }
 
 export const api = {
   health: () => request<HealthCheck>('/health'),
+
+  getSettings: () => request<SettingsPayload>('/settings'),
+
+  saveSettings: (data: { apiKey?: string; baseUrl?: string; model?: string; mockAi?: boolean }) =>
+    request<{ success: boolean }>('/settings/api-key', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   evaluate: (data: { jobDescription: string; jobUrl?: string; cvContent?: string }) =>
     request<EvaluationResponse>('/evaluate', {
@@ -72,50 +75,9 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  pipeline: (data: { jobDescription: string; jobUrl?: string; cvData?: any }) =>
+  pipeline: (data: { jobDescription: string; jobUrl?: string; cvContent?: string }) =>
     request<PipelineResponse>('/pipeline/auto', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-
-  scan: (company?: string) =>
-    request<ScanResult>('/scan', {
-      method: 'POST',
-      body: JSON.stringify({ company }),
-    }),
-
-  getCompanies: () =>
-    request<{ name: string; enabled: boolean; hasApi: boolean }[]>('/scan/companies'),
-
-  generatePdf: (cvData: any, filename?: string) =>
-    request<PdfResult>('/pdf/generate', {
-      method: 'POST',
-      body: JSON.stringify({ cvData, filename }),
-    }),
-
-  tailorPdf: (cvData: any, jobDescription: string, jobUrl?: string, company?: string) =>
-    request<PdfResult & { tailoredCV: any }>('/pdf/tailor', {
-      method: 'POST',
-      body: JSON.stringify({ cvData, jobDescription, jobUrl, company }),
-    }),
-
-  listPdfs: () => request<{ filename: string; url: string; size: number; created: string }[]>('/pdf/list'),
-
-  previewHtml: async (cvData: any): Promise<string> => {
-    console.log('[api.previewHtml] Sending request with cvData name:', cvData?.name);
-    const res = await fetch(`${API_BASE}/pdf/preview`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cvData }),
-    });
-    console.log('[api.previewHtml] Response status:', res.status, 'content-type:', res.headers.get('content-type'));
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      console.error('[api.previewHtml] Error body:', body);
-      throw new Error(body.error || `API error: ${res.status}`);
-    }
-    const text = await res.text();
-    console.log('[api.previewHtml] Got HTML, length:', text.length);
-    return text;
-  },
 };

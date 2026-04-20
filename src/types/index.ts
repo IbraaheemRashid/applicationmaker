@@ -1,8 +1,6 @@
 export type ApplicationStatus =
   | 'saved'
-  | 'evaluating'
   | 'evaluated'
-  | 'applying'
   | 'applied'
   | 'responded'
   | 'interview'
@@ -43,34 +41,17 @@ export interface Evaluation {
   personalizations: string[];
   interviewQuestions: string[];
   legitimacy: 'high' | 'medium' | 'suspicious';
+  tailoredSummary: string;
+  tailoredBullets: string[];
+  coverLetter: string;
 }
 
 export interface CV {
   id: string;
   name: string;
+  content: string;
   createdAt: string;
   updatedAt: string;
-  sections: CVSection[];
-  targetRole: string;
-  keywords: string[];
-}
-
-export interface CVSection {
-  id: string;
-  type: 'header' | 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'custom';
-  title: string;
-  content: string;
-  items: CVItem[];
-  order: number;
-}
-
-export interface CVItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  date: string;
-  description: string;
-  bullets: string[];
 }
 
 export interface InterviewStory {
@@ -83,21 +64,4 @@ export interface InterviewStory {
   reflection: string;
   tags: string[];
   usedFor: string[];
-}
-
-export interface DashboardStats {
-  totalApplications: number;
-  activeApplications: number;
-  interviewRate: number;
-  avgScore: number;
-  byStatus: Record<ApplicationStatus, number>;
-  recentActivity: ActivityItem[];
-}
-
-export interface ActivityItem {
-  id: string;
-  type: 'status_change' | 'new_application' | 'evaluation' | 'cv_generated';
-  description: string;
-  timestamp: string;
-  applicationId?: string;
 }

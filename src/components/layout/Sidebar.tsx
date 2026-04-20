@@ -1,65 +1,67 @@
 import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  ClipboardList,
-  FileText,
-  Sparkles,
-  MessageSquare,
-  Radar,
-  Settings,
-  Zap,
-} from 'lucide-react';
+import { Sparkles, ListChecks, MessageSquare, Settings as SettingsIcon } from 'lucide-react';
+
+interface SidebarProps {
+  onOpenSettings: () => void;
+}
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/evaluate', icon: Sparkles, label: 'Auto Pipeline' },
-  { to: '/tracker', icon: ClipboardList, label: 'Tracker' },
-  { to: '/scan', icon: Radar, label: 'Portal Scanner' },
-  { to: '/cv-builder', icon: FileText, label: 'CV Builder' },
-  { to: '/interview', icon: MessageSquare, label: 'Interview Prep' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/', icon: Sparkles, label: 'Apply', hint: 'eval → tailor', tourId: 'nav-apply' },
+  { to: '/pipeline', icon: ListChecks, label: 'Pipeline', hint: 'tracker', tourId: 'nav-pipeline' },
+  { to: '/interview', icon: MessageSquare, label: 'Interview', hint: 'prep & stories', tourId: 'nav-interview' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onOpenSettings }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-surface-900 border-r border-surface-800 flex flex-col z-40">
-      <div className="p-6 border-b border-surface-800">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg flex items-center justify-center">
-            <Zap size={20} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">ApplyNow</h1>
-            <p className="text-xs text-surface-400">Smart Job Tracking</p>
-          </div>
+    <aside className="fixed left-0 top-0 bottom-0 w-56 border-r border-neutral-900 flex flex-col z-40 bg-neutral-950">
+      <div className="px-5 pt-6 pb-8">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-lg font-semibold text-neutral-100 tracking-tight">apply</span>
+          <span className="text-lg font-semibold text-accent-500 tracking-tight">now</span>
         </div>
+        <p className="text-[10px] uppercase tracking-wider text-neutral-600 mt-0.5">
+          two minutes to apply
+        </p>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ to, icon: Icon, label }) => (
+      <nav className="flex-1 px-3 space-y-0.5">
+        {navItems.map(({ to, icon: Icon, label, hint, tourId }) => (
           <NavLink
             key={to}
             to={to}
+            end={to === '/'}
+            data-tour={tourId}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium border ${
+              `group flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
-                  ? 'bg-primary-600/20 text-primary-400 border-primary-500/30'
-                  : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800 border-transparent'
+                  ? 'bg-neutral-900 text-neutral-100'
+                  : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/60'
               }`
             }
           >
-            <Icon size={18} />
-            {label}
+            {({ isActive }) => (
+              <>
+                <Icon
+                  size={15}
+                  className={isActive ? 'text-accent-500' : 'text-neutral-600 group-hover:text-neutral-400'}
+                />
+                <span className="font-medium">{label}</span>
+                <span className="ml-auto text-[10px] text-neutral-700 group-hover:text-neutral-600">{hint}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-surface-800">
-        <div className="bg-gradient-to-r from-primary-600/10 to-accent-600/10 border border-primary-500/20 rounded-lg p-3">
-          <p className="text-xs text-surface-300">
-            Powered by <span className="text-primary-400 font-medium">career-ops</span>
-          </p>
-        </div>
+      <div className="px-3 pb-4 space-y-1">
+        <button
+          onClick={onOpenSettings}
+          data-tour="nav-settings"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/60 transition-colors cursor-pointer"
+        >
+          <SettingsIcon size={15} className="text-neutral-600" />
+          <span className="font-medium">Settings</span>
+        </button>
       </div>
     </aside>
   );

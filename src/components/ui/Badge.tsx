@@ -5,18 +5,18 @@ interface BadgeProps {
 }
 
 const variants = {
-  default: 'bg-surface-700 text-surface-200',
-  success: 'bg-emerald-500/20 text-emerald-400',
-  warning: 'bg-amber-500/20 text-amber-400',
-  danger: 'bg-red-500/20 text-red-400',
-  info: 'bg-blue-500/20 text-blue-400',
-  accent: 'bg-accent-500/20 text-accent-400',
+  default: 'bg-neutral-800 text-neutral-300 border border-neutral-700',
+  success: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30',
+  warning: 'bg-amber-500/10 text-amber-300 border border-amber-500/30',
+  danger: 'bg-red-500/10 text-red-300 border border-red-500/30',
+  info: 'bg-sky-500/10 text-sky-300 border border-sky-500/30',
+  accent: 'bg-accent-500/10 text-accent-400 border border-accent-500/30',
 };
 
 export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${variants[variant]} ${className}`}
     >
       {children}
     </span>

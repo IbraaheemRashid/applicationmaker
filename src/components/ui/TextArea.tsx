@@ -7,19 +7,19 @@ interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 
 export function TextArea({ label, error, className = '', ...props }: TextAreaProps) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {label && (
-        <label className="block text-sm font-medium text-surface-300">
+        <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wide">
           {label}
         </label>
       )}
       <textarea
-        className={`w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-100 placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-y ${
-          error ? 'border-red-500' : ''
+        className={`w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-neutral-100 placeholder:text-neutral-600 focus:border-neutral-600 focus:bg-neutral-850 transition-colors resize-y ${
+          error ? 'border-red-500/50' : ''
         } ${className}`}
         {...props}
       />
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   );
 }

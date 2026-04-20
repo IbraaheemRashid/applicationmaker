@@ -2,16 +2,14 @@ import type { ApplicationStatus, ScoreGrade } from '../types';
 
 export function getStatusColor(status: ApplicationStatus): string {
   const colors: Record<ApplicationStatus, string> = {
-    saved: 'bg-surface-600',
-    evaluating: 'bg-amber-500',
-    evaluated: 'bg-blue-500',
-    applying: 'bg-indigo-500',
-    applied: 'bg-purple-500',
-    responded: 'bg-cyan-500',
-    interview: 'bg-emerald-500',
-    offer: 'bg-green-500',
-    rejected: 'bg-red-500',
-    withdrawn: 'bg-surface-500',
+    saved: 'bg-neutral-700 text-neutral-300',
+    evaluated: 'bg-sky-500/15 text-sky-300 border border-sky-500/30',
+    applied: 'bg-violet-500/15 text-violet-300 border border-violet-500/30',
+    responded: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
+    interview: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30',
+    offer: 'bg-green-500/20 text-green-300 border border-green-500/40',
+    rejected: 'bg-red-500/15 text-red-300 border border-red-500/30',
+    withdrawn: 'bg-neutral-700/50 text-neutral-400',
   };
   return colors[status];
 }
@@ -21,10 +19,10 @@ export function getStatusLabel(status: ApplicationStatus): string {
 }
 
 export function getGradeColor(grade: ScoreGrade | null): string {
-  if (!grade) return 'text-surface-400';
+  if (!grade) return 'text-neutral-400';
   const colors: Record<ScoreGrade, string> = {
     A: 'text-emerald-400',
-    B: 'text-blue-400',
+    B: 'text-sky-400',
     C: 'text-amber-400',
     D: 'text-orange-400',
     F: 'text-red-400',
@@ -67,9 +65,7 @@ export function timeAgo(dateStr: string): string {
 
 export const STATUS_FLOW: ApplicationStatus[] = [
   'saved',
-  'evaluating',
   'evaluated',
-  'applying',
   'applied',
   'responded',
   'interview',

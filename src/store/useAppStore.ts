@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
-import type { Application, CV, InterviewStory, ActivityItem, ApplicationStatus } from '../types';
+import type { Application, CV, InterviewStory, ApplicationStatus } from '../types';
 
 interface AppState {
   applications: Application[];
   cvs: CV[];
   stories: InterviewStory[];
-  activity: ActivityItem[];
+  tourComplete: boolean;
 
   addApplication: (app: Omit<Application, 'id' | 'dateAdded' | 'lastUpdated'>) => string;
   updateApplication: (id: string, updates: Partial<Application>) => void;
@@ -22,16 +22,16 @@ interface AppState {
   updateStory: (id: string, updates: Partial<InterviewStory>) => void;
   deleteStory: (id: string) => void;
 
-  addActivity: (item: Omit<ActivityItem, 'id' | 'timestamp'>) => void;
+  completeTour: () => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       applications: [],
       cvs: [],
       stories: [],
-      activity: [],
+      tourComplete: false,
 
       addApplication: (app) => {
         const id = uuid();
@@ -42,11 +42,6 @@ export const useAppStore = create<AppState>()(
             ...state.applications,
           ],
         }));
-        get().addActivity({
-          type: 'new_application',
-          description: `Added ${app.company} - ${app.role}`,
-          applicationId: id,
-        });
         return id;
       },
 
@@ -65,16 +60,19 @@ export const useAppStore = create<AppState>()(
       },
 
       updateStatus: (id, status) => {
-        const app = get().applications.find((a) => a.id === id);
-        if (!app) return;
-        const updates: Partial<Application> = { status };
-        if (status === 'applied') updates.dateApplied = new Date().toISOString();
-        get().updateApplication(id, updates);
-        get().addActivity({
-          type: 'status_change',
-          description: `${app.company} - ${app.role}: ${app.status} → ${status}`,
-          applicationId: id,
-        });
+        set((state) => ({
+          applications: state.applications.map((a) => {
+            if (a.id !== id) return a;
+            const updates: Partial<Application> = {
+              status,
+              lastUpdated: new Date().toISOString(),
+            };
+            if (status === 'applied' && !a.dateApplied) {
+              updates.dateApplied = new Date().toISOString();
+            }
+            return { ...a, ...updates };
+          }),
+        }));
       },
 
       addCV: (cv) => {
@@ -110,9 +108,7 @@ export const useAppStore = create<AppState>()(
 
       updateStory: (id, updates) => {
         set((state) => ({
-          stories: state.stories.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-          ),
+          stories: state.stories.map((s) => (s.id === id ? { ...s, ...updates } : s)),
         }));
       },
 
@@ -122,14 +118,7 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      addActivity: (item) => {
-        set((state) => ({
-          activity: [
-            { ...item, id: uuid(), timestamp: new Date().toISOString() },
-            ...state.activity.slice(0, 49),
-          ],
-        }));
-      },
+      completeTour: () => set({ tourComplete: true }),
     }),
     { name: 'applynow-storage' }
   )

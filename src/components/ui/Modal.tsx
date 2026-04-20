@@ -39,20 +39,20 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative ${sizes[size]} w-full bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl max-h-[85vh] flex flex-col`}
+        className={`relative ${sizes[size]} w-full bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl max-h-[85vh] flex flex-col fade-in`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-surface-800">
-          <h2 className="text-lg font-semibold text-surface-100">{title}</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800">
+          <h2 className="text-sm font-semibold text-neutral-100">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-surface-800 text-surface-400 hover:text-surface-200 transition-colors cursor-pointer"
+            className="p-1 rounded-md hover:bg-neutral-800 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto">{children}</div>
+        <div className="p-5 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
